@@ -1,0 +1,30 @@
+[Unit]
+Description=VictoriaMetrics time series database
+Documentation=https://docs.victoriametrics.com
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=victoriametrics
+Group=victoriametrics
+EnvironmentFile=/etc/default/victoria-metrics
+ExecStart=/usr/bin/victoria-metrics-prod \
+    -storageDataPath=${VM_STORAGE_DATA_PATH} \
+    -httpListenAddr=${VM_HTTP_LISTEN_ADDR} \
+    -retentionPeriod=${VM_RETENTION_PERIOD} \
+    $VM_OPTS
+Restart=on-failure
+RestartSec=5
+# VictoriaMetrics keeps many data part files open
+LimitNOFILE=65536
+# Give the database time to flush in-memory parts to disk
+TimeoutStopSec=60
+KillSignal=SIGINT
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+[Unit]
+Description=Simple IoT edge and cloud application framework
+Documentation=https://docs.simpleiot.org
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/default/siot
+ExecStart=/usr/bin/siot serve
+Restart=on-failure
+RestartSec=5
+# Give the embedded store time to check-point on shutdown
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

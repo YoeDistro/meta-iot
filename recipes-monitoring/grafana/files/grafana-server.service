@@ -1,0 +1,38 @@
+[Unit]
+Description=Grafana observability and data visualization platform
+Documentation=https://grafana.com/docs/
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=grafana
+Group=grafana
+EnvironmentFile=/etc/default/grafana-server
+WorkingDirectory=/usr/share/grafana
+RuntimeDirectory=grafana
+RuntimeDirectoryMode=0750
+ExecStart=/usr/share/grafana/bin/grafana server \
+    --config=${CONF_FILE} \
+    --pidfile=${PID_FILE_DIR}/grafana-server.pid \
+    --homepath=${GRAFANA_HOME} \
+    cfg:default.paths.logs=${LOG_DIR} \
+    cfg:default.paths.data=${DATA_DIR} \
+    cfg:default.paths.plugins=${PLUGINS_DIR} \
+    cfg:default.paths.provisioning=${PROVISIONING_CFG_DIR}
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=10000
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+ProtectKernelModules=true
+ProtectKernelTunables=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target
