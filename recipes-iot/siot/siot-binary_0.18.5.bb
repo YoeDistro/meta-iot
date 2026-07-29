@@ -40,7 +40,7 @@ RPROVIDES:${PN} += "simpleiot"
 RCONFLICTS:${PN} += "simpleiot"
 RREPLACES:${PN} += "simpleiot"
 
-SIOT_DATA_DIR ?= "/data"
+SIOT_DATA_DIR ?= "${localstatedir}/lib/siot"
 
 do_install() {
     install -D -m 0755 ${S}/siot ${D}${bindir}/siot

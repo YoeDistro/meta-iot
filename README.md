@@ -42,11 +42,11 @@ For `arm`, the ARMv6 and ARMv7 release assets are selected from `TUNE_FEATURES`.
 Each recipe installs a systemd unit and a matching `/etc/default` file holding
 its runtime settings:
 
-| Service                    | Default listen address | State directory             |
-| -------------------------- | ---------------------- | --------------------------- |
-| `grafana-server.service`   | `:3000`                | `/var/lib/grafana`          |
-| `victoria-metrics.service` | `:8428`                | `/var/lib/victoria-metrics` |
-| `siot.service`             | `:8118`                | `/data`                     |
+| Service                    | Default listen address | State directory             | Notes                   |
+| -------------------------- | ---------------------- | --------------------------- | ----------------------- |
+| `grafana-server.service`   | `:3000`                | `/var/lib/grafana`          |                         |
+| `victoria-metrics.service` | `:8428`                | `/var/lib/victoria-metrics` | `/vmui` path for web ui |
+| `siot.service`             | `:8118`                | `/var/lib/siot`             |                         |
 
 Grafana and VictoriaMetrics run under dedicated system users created by the
 `useradd` class. Simple IoT runs as root, matching upstream, since edge
@@ -74,8 +74,10 @@ IMAGE_INSTALL:append = " grafana-binary victoria-metrics-binary siot-binary"
 1. Rename the recipe to the new version.
 2. Refresh the per-architecture `sha256sum` entries from the upstream checksum
    files:
-   - Grafana: `https://dl.grafana.com/oss/release/grafana-<version>.linux-<arch>.tar.gz.sha256`
-   - VictoriaMetrics: the `victoria-metrics-linux-<arch>-v<version>_checksums.txt` release asset
+   - Grafana:
+     `https://dl.grafana.com/oss/release/grafana-<version>.linux-<arch>.tar.gz.sha256`
+   - VictoriaMetrics: the
+     `victoria-metrics-linux-<arch>-v<version>_checksums.txt` release asset
    - Simple IoT: the `checksums.txt` release asset
 3. Confirm the license file checksum is unchanged.
 
