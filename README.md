@@ -55,6 +55,72 @@ deployments commonly need access to serial and GPIO devices.
 Grafana site configuration lives in `/etc/grafana/grafana.ini`. The shipped
 `/usr/share/grafana/conf/defaults.ini` is left untouched, as upstream expects.
 
+## Sending Simple IoT data to VictoriaMetrics
+
+The Simple IoT `Database` client writes points with the InfluxDB 2 line
+protocol, and VictoriaMetrics accepts that protocol at `/api/v2/write`, so the
+two services work together without a bridge.
+
+In the Simple IoT portal (`http://<device>:8118`), add a `Database` node as a
+child of the node whose subtree should be recorded. The client records points
+published below its parent, so attaching it to the root node captures
+everything. Configure the node with:
+
+| Field           | Value                                                    |
+| --------------- | -------------------------------------------------------- |
+| URI             | `http://localhost:8428`                                  |
+| Org             | any value, or blank; VictoriaMetrics ignores it          |
+| Bucket          | any value, or blank; VictoriaMetrics ignores it          |
+| Auth token      | blank, unless a proxy in front of the database wants one |
+| Tag point types | optional; point types to record as tags on each sample   |
+
+Use `http` rather than `https`. VictoriaMetrics serves plain HTTP on `:8428`
+unless TLS is configured, while the portal's placeholder text for this field
+suggests an `https` URL. A TLS mismatch appears in the journal as
+`server gave HTTP response to HTTPS client`. Editing the URI rebuilds the write
+connection, so the change takes effect without restarting `siot.service`.
+
+VictoriaMetrics has no organizations or buckets, which is why those two fields
+carry no meaning here. Its cluster version expresses tenancy in the URL path
+instead.
+
+Points land in the `points` measurement, which VictoriaMetrics maps to the
+metric names `points_value` and `points_text`, labeled with:
+
+| Label                                      | Source                     |
+| ------------------------------------------ | -------------------------- |
+| `type`, `key`                              | the point's type and key   |
+| `node.id`, `node.description`, `node.type` | the node holding the point |
+| `node.<point type>.<point key>`            | each configured tag point  |
+
+Grafana reads this through the VictoriaMetrics or Prometheus data source
+pointed at `http://localhost:8428`:
+
+```
+points_value{type="temp", "node.description"="Sensor 1"}
+```
+
+Label names contain dots, so queries need the quoted label syntax, which means
+writing them in Grafana's code editor rather than the query builder.
+
+VictoriaMetrics stores numeric samples and converts other field values to zero,
+so the text field of every point becomes a `points_text` series of zeros. Text
+point values are better served by InfluxDB. To leave the zeros out, create
+`/etc/victoria-metrics/relabel.yml`:
+
+```yaml
+- if: '{__name__="points_text"}'
+  action: drop
+```
+
+and reference it from `/etc/default/victoria-metrics`:
+
+```
+VM_OPTS=-relabelConfig=/etc/victoria-metrics/relabel.yml
+```
+
+The `/metric-relabel-debug` page shows how a rule applies before it goes live.
+
 ## Adding the layer
 
 Add to your `bblayers.conf`:
