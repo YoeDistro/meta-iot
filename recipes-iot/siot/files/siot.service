@@ -1,8 +1,10 @@
 [Unit]
 Description=Simple IoT edge and cloud application framework
 Documentation=https://docs.simpleiot.org
-Wants=network-online.target
-After=network-online.target
+# Ordered after the network stack is up, but deliberately not after
+# network-online.target: siot binds to wildcard addresses and reconnects
+# upstream on its own, so it should come up with or without a link.
+After=network.target
 
 [Service]
 Type=simple

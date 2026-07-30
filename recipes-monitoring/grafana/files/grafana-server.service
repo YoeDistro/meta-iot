@@ -1,8 +1,10 @@
 [Unit]
 Description=Grafana observability and data visualization platform
 Documentation=https://grafana.com/docs/
-Wants=network-online.target
-After=network-online.target
+# Ordered after the network stack is up, but deliberately not after
+# network-online.target: Grafana binds to all interfaces and retries its
+# data source connections, so it should come up with or without a link.
+After=network.target
 
 [Service]
 Type=simple

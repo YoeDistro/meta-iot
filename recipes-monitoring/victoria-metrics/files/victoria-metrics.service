@@ -1,8 +1,10 @@
 [Unit]
 Description=VictoriaMetrics time series database
 Documentation=https://docs.victoriametrics.com
-Wants=network-online.target
-After=network-online.target
+# Ordered after the network stack is up, but deliberately not after
+# network-online.target: the listen address is a wildcard, so the database
+# should come up with or without a link.
+After=network.target
 
 [Service]
 Type=simple
