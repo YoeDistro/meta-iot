@@ -14,6 +14,10 @@ SRC_URI = "file://siot-config.yml \
            file://siot-config.service \
           "
 
+# The recipe ships local files rather than a source tree, so unpacking lands
+# everything directly in UNPACKDIR.
+S = "${UNPACKDIR}"
+
 inherit allarch systemd
 
 # Either provider of the siot command works here
