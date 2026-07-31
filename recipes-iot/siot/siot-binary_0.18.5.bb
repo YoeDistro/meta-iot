@@ -40,12 +40,12 @@ RPROVIDES:${PN} += "simpleiot"
 RCONFLICTS:${PN} += "simpleiot"
 RREPLACES:${PN} += "simpleiot"
 
-SIOT_DATA_DIR ?= "${localstatedir}/lib/siot"
+# The store directory is not packaged here. SIOT_DATA in /etc/default/siot
+# points it at the /data partition, which is a mount point, so anything the
+# rootfs shipped underneath would be covered. siot.service creates it.
 
 do_install() {
     install -D -m 0755 ${S}/siot ${D}${bindir}/siot
-
-    install -d -m 0755 ${D}${SIOT_DATA_DIR}
 
     install -D -m 0644 ${UNPACKDIR}/siot.default ${D}${sysconfdir}/default/siot
 
@@ -56,7 +56,7 @@ do_install() {
 
 SYSTEMD_SERVICE:${PN} = "siot.service"
 
-FILES:${PN} += "${systemd_system_unitdir} ${sysconfdir}/default/siot ${SIOT_DATA_DIR}"
+FILES:${PN} += "${systemd_system_unitdir} ${sysconfdir}/default/siot"
 
 CONFFILES:${PN} = "${sysconfdir}/default/siot"
 

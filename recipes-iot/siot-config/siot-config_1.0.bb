@@ -24,7 +24,9 @@ SIOT_CONFIG_DIR ?= "${sysconfdir}/siot"
 do_install() {
     install -D -m 0644 ${UNPACKDIR}/siot-config.yml ${D}${SIOT_CONFIG_DIR}/config.yml
 
-    install -D -m 0755 ${UNPACKDIR}/siot-config-import ${D}${libexecdir}/siot-config-import
+    # On PATH rather than in libexec: --force makes this a command an
+    # operator runs by hand to import a revised configuration.
+    install -D -m 0755 ${UNPACKDIR}/siot-config-import ${D}${bindir}/siot-config-import
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
         install -D -m 0644 ${UNPACKDIR}/siot-config.service ${D}${systemd_system_unitdir}/siot-config.service
@@ -33,6 +35,6 @@ do_install() {
 
 SYSTEMD_SERVICE:${PN} = "siot-config.service"
 
-FILES:${PN} += "${systemd_system_unitdir} ${SIOT_CONFIG_DIR} ${libexecdir}/siot-config-import"
+FILES:${PN} += "${systemd_system_unitdir} ${SIOT_CONFIG_DIR}"
 
 CONFFILES:${PN} = "${SIOT_CONFIG_DIR}/config.yml"

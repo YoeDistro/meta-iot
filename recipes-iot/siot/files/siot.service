@@ -5,10 +5,15 @@ Documentation=https://docs.simpleiot.org
 # network-online.target: siot binds to wildcard addresses and reconnects
 # upstream on its own, so it should come up with or without a link.
 After=network.target
+# The store sits on the /data partition, which has to be mounted first
+RequiresMountsFor=/data
 
 [Service]
 Type=simple
 EnvironmentFile=/etc/default/siot
+# A mount covers whatever the rootfs ships under /data, so the store
+# directory is created here rather than packaged by the recipe.
+ExecStartPre=/bin/mkdir -p ${SIOT_DATA}
 ExecStart=/usr/bin/siot serve
 Restart=on-failure
 RestartSec=5

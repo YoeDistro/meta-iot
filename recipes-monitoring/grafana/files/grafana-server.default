@@ -9,8 +9,10 @@ CONF_DIR=/etc/grafana
 CONF_FILE=/etc/grafana/grafana.ini
 PROVISIONING_CFG_DIR=/etc/grafana/provisioning
 
-DATA_DIR=/var/lib/grafana
-PLUGINS_DIR=/var/lib/grafana/plugins
+# The database and any plugins installed later are dynamic data, so they
+# sit on the /data partition and outlive a rootfs update
+DATA_DIR=/data/grafana
+PLUGINS_DIR=/data/grafana/plugins
 LOG_DIR=/var/log/grafana
 
 PID_FILE_DIR=/run/grafana

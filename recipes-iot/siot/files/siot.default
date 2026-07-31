@@ -1,8 +1,9 @@
 # Runtime configuration for siot.service
 # Reference: https://docs.simpleiot.org
 
-# Directory holding the SimpleIoT store (siot.sqlite and its WAL files)
-SIOT_DATA=/var/lib/siot
+# Directory holding the SimpleIoT store (siot.sqlite and its WAL files).
+# On the /data partition so that it outlives a rootfs update.
+SIOT_DATA=/data/siot
 
 # Port the built-in web portal listens on
 SIOT_HTTP_PORT=8118

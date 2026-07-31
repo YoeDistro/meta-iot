@@ -6,7 +6,7 @@ description:
   data so the file installs on any device. Triggers on requests like
   "sanitize this siot export", "make this export importable", "regenerate
   siot-config.yml from the device", "update the SIOT config from a running
-  instance", or any editing of siot.yml or
+  instance", or any editing of
   recipes-iot/siot-config/files/siot-config.yml.
 ---
 
@@ -27,12 +27,12 @@ reads an export on stdin, or from a path, and writes the configuration on
 stdout.
 
 ```sh
-# From a running device
-siot export -natsServer nats://127.0.0.1:4222 |
-    .claude/skills/sanitize-siot-export/sanitize-siot-export.py > siot.yml
+# From a running device, straight into the file the recipe installs
+siot export | .claude/skills/sanitize-siot-export/sanitize-siot-export.py \
+    > recipes-iot/siot-config/files/siot-config.yml
 
-# From a saved export
-.claude/skills/sanitize-siot-export/sanitize-siot-export.py siot.yml
+# From a saved export, to stdout
+.claude/skills/sanitize-siot-export/sanitize-siot-export.py export.yml
 ```
 
 The script needs PyYAML. It is present on the development host; it is not
@@ -49,15 +49,12 @@ into its place. That single rule produces both forms the layer uses:
 | `--keep device,user,metrics,db` (default) | the whole tree, device node at the root | the root of a fresh store |
 | `--keep metrics,db` | a flat list, no wrapper | a device node that already exists |
 
-`siot.yml` at the layer root holds the first form: a complete picture of
-how a device is configured, including the device node and its
-administrative user.
+The layer ships the first form. `siot-config-import` runs
+`siot import -parentID root`, so the file supplies its own device node
+instead of attaching beneath one the target instance generated.
 
-`recipes-iot/siot-config/files/siot-config.yml` holds the second.
-`siot-config-import` runs `siot import -parentID "$device_id"`, discovering
-that ID from the target instance at first boot, so the imported nodes
-attach to the device node already there. A device node in that file would
-create a second one beneath the first.
+The second form is what to reach for when importing beneath a device node
+that already exists, whether by hand or from a modified import script.
 
 ## What the conversion removes, and why
 
@@ -106,7 +103,7 @@ def walk(nodes, indent=0):
         print(' ' * indent + n['type'],
               [(p['type'], p.get('text', p.get('value'))) for p in n['points']])
         walk(n.get('children', []), indent + 2)
-walk(yaml.safe_load(open('siot.yml'))['nodes'])
+walk(yaml.safe_load(open('recipes-iot/siot-config/files/siot-config.yml'))['nodes'])
 "
 ```
 
@@ -115,9 +112,12 @@ values carry hostnames, URIs, and credentials worth confirming against the
 target rather than the machine the export came from. The `pass` point on
 the user node is one to look at every time.
 
-## Keeping the shipped config readable
+## Shipping the result
 
-`recipes-iot/siot-config/files/siot-config.yml` is maintained by hand and
-carries comments explaining what each node does. The script emits no
-comments. When regenerating that file, bring the comments across, or apply
-the script's output as a diff so the surrounding prose stays intact.
+`recipes-iot/siot-config/files/siot-config.yml` is the only copy of the
+configuration in this layer, and the command under "Run the script" rewrites
+it in place. Read the diff before committing: a capture carries whatever the
+source device happened to be set to.
+
+The script emits no comments, so anything worth explaining about the
+configuration belongs in the layer README rather than in the file itself.

@@ -33,18 +33,20 @@ inherit bin_package systemd useradd
 PROVIDES += "victoria-metrics"
 RPROVIDES:${PN} += "victoria-metrics"
 
-VM_DATA_DIR ?= "${localstatedir}/lib/victoria-metrics"
+# The database directory is not packaged here. VM_STORAGE_DATA_PATH in
+# /etc/default/victoria-metrics points it at the /data partition, which is a
+# mount point, so anything the rootfs shipped underneath would be covered.
+# victoria-metrics.service creates it.
 
+# The account needs no home of its own: the database directory belongs to the
+# service, and nothing here reads $HOME.
 USERADD_PACKAGES = "${PN}"
-USERADD_PARAM:${PN} = "--system --no-create-home --home ${VM_DATA_DIR} \
+USERADD_PARAM:${PN} = "--system --no-create-home --home /nonexistent \
                        --shell /bin/false --user-group victoriametrics"
 
 do_install() {
     install -D -m 0755 ${S}/victoria-metrics-prod ${D}${bindir}/victoria-metrics-prod
     ln -sf victoria-metrics-prod ${D}${bindir}/victoria-metrics
-
-    install -d -m 0750 ${D}${VM_DATA_DIR}
-    chown victoriametrics:victoriametrics ${D}${VM_DATA_DIR}
 
     install -D -m 0644 ${UNPACKDIR}/victoria-metrics.default ${D}${sysconfdir}/default/victoria-metrics
 
@@ -57,7 +59,6 @@ do_install() {
 SYSTEMD_SERVICE:${PN} = "victoria-metrics.service"
 
 FILES:${PN} += "${systemd_system_unitdir} ${sysconfdir}/default/victoria-metrics"
-FILES:${PN} += "${VM_DATA_DIR}"
 
 CONFFILES:${PN} = "${sysconfdir}/default/victoria-metrics"
 

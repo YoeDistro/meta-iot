@@ -1,8 +1,9 @@
 # Runtime configuration for victoria-metrics.service
 # Full flag reference: https://docs.victoriametrics.com/#list-of-command-line-flags
 
-# Where the time series data is kept
-VM_STORAGE_DATA_PATH=/var/lib/victoria-metrics
+# Where the time series data is kept. On the /data partition so that it
+# outlives a rootfs update.
+VM_STORAGE_DATA_PATH=/data/victoria-metrics
 
 # Address the HTTP API and web UI listen on
 VM_HTTP_LISTEN_ADDR=:8428

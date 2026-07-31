@@ -9,8 +9,8 @@ same file installs on any number of devices.
 This reads an export on stdin, or from a path, and writes a configuration
 on stdout:
 
-  siot export -natsServer nats://127.0.0.1:4222 |
-      ./sanitize-siot-export.py > siot.yml
+  siot export | ./sanitize-siot-export.py \\
+      > recipes-iot/siot-config/files/siot-config.yml
 
 Reference: https://docs.simpleiot.org/docs/user/configuration.html
 """

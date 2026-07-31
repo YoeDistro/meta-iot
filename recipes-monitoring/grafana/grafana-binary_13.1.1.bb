@@ -34,7 +34,10 @@ PROVIDES += "grafana"
 RPROVIDES:${PN} += "grafana"
 
 GRAFANA_HOME ?= "${datadir}/grafana"
-GRAFANA_DATA_DIR ?= "${localstatedir}/lib/grafana"
+# The data directory is not packaged here. DATA_DIR in
+# /etc/default/grafana-server points it at the /data partition, which is a
+# mount point, so anything the rootfs shipped underneath would be covered.
+# grafana-server.service creates it. Logs stay under /var/log.
 GRAFANA_LOG_DIR ?= "${localstatedir}/log/grafana"
 
 USERADD_PACKAGES = "${PN}"
@@ -65,10 +68,8 @@ do_install() {
     install -d ${D}${sysconfdir}/grafana/provisioning/alerting
     install -d ${D}${sysconfdir}/grafana/provisioning/access-control
 
-    install -d -m 0750 ${D}${GRAFANA_DATA_DIR}
-    install -d -m 0750 ${D}${GRAFANA_DATA_DIR}/plugins
     install -d -m 0750 ${D}${GRAFANA_LOG_DIR}
-    chown -R grafana:grafana ${D}${GRAFANA_DATA_DIR} ${D}${GRAFANA_LOG_DIR}
+    chown -R grafana:grafana ${D}${GRAFANA_LOG_DIR}
     chown root:grafana ${D}${sysconfdir}/grafana/grafana.ini
 
     install -D -m 0644 ${UNPACKDIR}/grafana-server.default ${D}${sysconfdir}/default/grafana-server
@@ -82,7 +83,7 @@ do_install() {
 SYSTEMD_SERVICE:${PN} = "grafana-server.service"
 
 FILES:${PN} += "${GRAFANA_HOME} ${sysconfdir}/grafana ${sysconfdir}/default/grafana-server \
-                ${GRAFANA_DATA_DIR} ${GRAFANA_LOG_DIR} ${systemd_system_unitdir}"
+                ${GRAFANA_LOG_DIR} ${systemd_system_unitdir}"
 
 CONFFILES:${PN} = "${sysconfdir}/grafana/grafana.ini ${sysconfdir}/default/grafana-server"
 

@@ -5,6 +5,8 @@ Documentation=https://grafana.com/docs/
 # network-online.target: Grafana binds to all interfaces and retries its
 # data source connections, so it should come up with or without a link.
 After=network.target
+# The database sits on the /data partition, which has to be mounted first
+RequiresMountsFor=/data
 
 [Service]
 Type=simple
@@ -14,6 +16,12 @@ EnvironmentFile=/etc/default/grafana-server
 WorkingDirectory=/usr/share/grafana
 RuntimeDirectory=grafana
 RuntimeDirectoryMode=0750
+# A mount covers whatever the rootfs ships under /data, so the data
+# directory is created here rather than packaged by the recipe. The "+"
+# runs these as root, before the drop to the grafana user.
+ExecStartPre=+/bin/mkdir -p ${DATA_DIR} ${PLUGINS_DIR}
+ExecStartPre=+/bin/chown grafana:grafana ${DATA_DIR} ${PLUGINS_DIR}
+ExecStartPre=+/bin/chmod 0750 ${DATA_DIR} ${PLUGINS_DIR}
 ExecStart=/usr/share/grafana/bin/grafana server \
     --config=${CONF_FILE} \
     --pidfile=${PID_FILE_DIR}/grafana-server.pid \

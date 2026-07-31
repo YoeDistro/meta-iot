@@ -5,12 +5,20 @@ Documentation=https://docs.victoriametrics.com
 # network-online.target: the listen address is a wildcard, so the database
 # should come up with or without a link.
 After=network.target
+# The database sits on the /data partition, which has to be mounted first
+RequiresMountsFor=/data
 
 [Service]
 Type=simple
 User=victoriametrics
 Group=victoriametrics
 EnvironmentFile=/etc/default/victoria-metrics
+# A mount covers whatever the rootfs ships under /data, so the data
+# directory is created here rather than packaged by the recipe. The "+"
+# runs these as root, before the drop to the victoriametrics user.
+ExecStartPre=+/bin/mkdir -p ${VM_STORAGE_DATA_PATH}
+ExecStartPre=+/bin/chown victoriametrics:victoriametrics ${VM_STORAGE_DATA_PATH}
+ExecStartPre=+/bin/chmod 0750 ${VM_STORAGE_DATA_PATH}
 ExecStart=/usr/bin/victoria-metrics-prod \
     -storageDataPath=${VM_STORAGE_DATA_PATH} \
     -httpListenAddr=${VM_HTTP_LISTEN_ADDR} \
