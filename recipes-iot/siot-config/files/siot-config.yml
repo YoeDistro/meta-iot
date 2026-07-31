@@ -1,0 +1,66 @@
+# Simple IoT node configuration for this device.
+#
+# siot-config.service imports this file once, the first time the device
+# boots with a Simple IoT store present. The nodes below are attached to
+# the device node of the local instance.
+#
+# Node IDs are left out on purpose. Simple IoT generates a new ID for
+# every imported node, so the same file can be installed on any number of
+# devices. Runtime points, such as collected metrics and host details,
+# are left out as well; the clients populate those as they run.
+#
+# Reference: https://docs.simpleiot.org/docs/user/configuration.html
+
+nodes:
+  # Records every point published below the device node to
+  # VictoriaMetrics, which accepts the InfluxDB 2 line protocol on :8428.
+  - type: db
+    points:
+      - type: description
+        text: Victoria Metrics
+      - type: uri
+        text: http://localhost:8428
+      - type: tagPointType
+        text: tag
+
+  # Host metrics: CPU, memory, disk, network, load, temperature, uptime.
+  - type: metrics
+    points:
+      - type: description
+        text: Metrics System
+      - type: type
+        text: system
+      - type: period
+        value: 60
+
+  # Metrics for the Simple IoT process itself.
+  - type: metrics
+    points:
+      - type: description
+        text: Metrics SIOT
+      - type: type
+        text: app
+      - type: period
+        value: 120
+
+  - type: metrics
+    points:
+      - type: description
+        text: Metrics grafana
+      - type: type
+        text: process
+      - type: name
+        text: grafana
+      - type: period
+        value: 120
+
+  - type: metrics
+    points:
+      - type: description
+        text: Metrics Victoria Metrics
+      - type: type
+        text: process
+      - type: name
+        text: victoria-metrics-prod
+      - type: period
+        value: 120

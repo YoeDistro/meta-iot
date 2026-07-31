@@ -1,0 +1,209 @@
+nodes:
+- id: a78560e7-9259-43dd-8956-afeb3c2a2e6e
+  type: device
+  parent: root
+  points:
+  - type: description
+    text: rpi5
+    origin: 17accaf2-de32-4bed-bb39-55396d416f08
+  - type: metricNatsCycleNode
+    value: 0.020833333333333332
+  - type: metricNatsCycleNodeEdgePoint
+    value: 1.0
+  - type: metricNatsCycleNodePoint
+    value: 0.8
+  - type: metricNatsPendingNodeEdgePoint
+  - type: metricNatsPendingNodePoint
+  - type: versionApp
+    text: 0.18.5
+  - type: versionOS
+    text: 2026.7.0
+  children:
+  - id: 17accaf2-de32-4bed-bb39-55396d416f08
+    type: user
+    parent: a78560e7-9259-43dd-8956-afeb3c2a2e6e
+    points:
+    - type: email
+      text: admin
+    - type: firstName
+      text: admin
+    - type: lastName
+      text: user
+    - type: pass
+      text: admin
+    - type: phone
+  - id: 6dae2311-7230-4732-91eb-715693e4d384
+    type: metrics
+    parent: a78560e7-9259-43dd-8956-afeb3c2a2e6e
+    points:
+    - type: description
+      text: Metrics System
+      origin: 17accaf2-de32-4bed-bb39-55396d416f08
+    - type: host
+      key: hostname
+      text: raspberrypi5
+    - type: host
+      key: kernelArch
+      text: aarch64
+    - type: host
+      key: kernelVersion
+      text: 6.18.33-v8-16k
+    - type: host
+      key: os
+      text: linux
+    - type: host
+      key: platform
+      text: yoe
+    - type: host
+      key: platformFamily
+    - type: host
+      key: platformVersion
+      text: 26.07.0
+    - type: host
+      key: virtualizationRole
+    - type: host
+      key: virtualizationSystem
+    - type: hostBootTime
+      value: 1.785349886e+09
+    - type: metricSysCPUPercent
+      value: 0.16677089847519563
+    - type: metricSysDiskUsedPercent
+      key: /
+      value: 42.4074176655318
+    - type: metricSysDiskUsedPercent
+      key: /data
+      value: 100.0
+    - type: metricSysLoad
+      key: "1"
+      value: 0.02
+    - type: metricSysLoad
+      key: "15"
+      value: 0.01
+    - type: metricSysLoad
+      key: "5"
+      value: 0.05
+    - type: metricSysMem
+      key: available
+      value: 3.8084608e+09
+    - type: metricSysMem
+      key: free
+      value: 2.994487296e+09
+    - type: metricSysMem
+      key: total
+      value: 4.243554304e+09
+    - type: metricSysMem
+      key: used
+      value: 3.80813312e+08
+    - type: metricSysMemUsedPercent
+      value: 8.973923384014268
+    - type: metricSysNetBytesRecv
+      key: eth0
+      value: 1.65392912e+08
+    - type: metricSysNetBytesRecv
+      key: lo
+      value: 1.26400138e+08
+    - type: metricSysNetBytesRecv
+      key: wlan0
+    - type: metricSysNetBytesSent
+      key: eth0
+      value: 3.5726874e+07
+    - type: metricSysNetBytesSent
+      key: lo
+      value: 1.26400138e+08
+    - type: metricSysNetBytesSent
+      key: wlan0
+    - type: metricSysUptime
+      value: 100356.0
+    - type: period
+      value: 60.0
+      origin: 17accaf2-de32-4bed-bb39-55396d416f08
+    - type: temp
+      key: cpu_thermal
+      value: 49.6
+    - type: temp
+      key: rp1_adc
+      value: 50.242
+    - type: type
+      text: system
+      origin: 17accaf2-de32-4bed-bb39-55396d416f08
+  - id: cd05f1a0-c525-4ac6-92f8-49b9eaf6590a
+    type: db
+    parent: a78560e7-9259-43dd-8956-afeb3c2a2e6e
+    points:
+    - type: description
+      text: Victoria Metrics
+      origin: 17accaf2-de32-4bed-bb39-55396d416f08
+    - type: tagPointType
+      text: tag
+      origin: 17accaf2-de32-4bed-bb39-55396d416f08
+    - type: uri
+      text: http://localhost:8428
+      origin: 17accaf2-de32-4bed-bb39-55396d416f08
+  - id: 631941c9-e5db-4172-8387-78cd613f4d1d
+    type: metrics
+    parent: a78560e7-9259-43dd-8956-afeb3c2a2e6e
+    points:
+    - type: description
+      text: Metrics SIOT
+      origin: 17accaf2-de32-4bed-bb39-55396d416f08
+    - type: metricAppAlloc
+      value: 2.795088e+06
+    - type: metricAppNumGoroutine
+      value: 95.0
+    - type: metricProcCPUPercent
+      value: 0.08330886700947485
+    - type: metricProcMemPercent
+      value: 0.8729527592658997
+    - type: metricProcMemRSS
+      value: 3.7044224e+07
+    - type: period
+      value: 120.0
+    - type: type
+      text: app
+      origin: 17accaf2-de32-4bed-bb39-55396d416f08
+  - id: 761c4ff1-fe18-448d-8435-1b3dbfc94d94
+    type: metrics
+    parent: a78560e7-9259-43dd-8956-afeb3c2a2e6e
+    points:
+    - type: count
+      value: 1.0
+    - type: description
+      text: Metrics grafana
+      origin: 17accaf2-de32-4bed-bb39-55396d416f08
+    - type: metricProcCPUPercent
+      value: 2.2724773215715266
+    - type: metricProcMemPercent
+      value: 7.841131210327148
+    - type: metricProcMemRSS
+      value: 3.32742656e+08
+    - type: name
+      text: grafana
+      origin: 17accaf2-de32-4bed-bb39-55396d416f08
+    - type: period
+      value: 120.0
+    - type: type
+      text: process
+      origin: 17accaf2-de32-4bed-bb39-55396d416f08
+  - id: 39d30f32-715c-43d6-aba9-3cf0d055a300
+    type: metrics
+    parent: a78560e7-9259-43dd-8956-afeb3c2a2e6e
+    points:
+    - type: count
+      value: 1.0
+    - type: description
+      text: Metrics Victoria Metrics
+      origin: 17accaf2-de32-4bed-bb39-55396d416f08
+    - type: metricProcCPUPercent
+      value: 0.09290749920321678
+    - type: metricProcMemPercent
+      value: 2.1343135833740234
+    - type: metricProcMemRSS
+      value: 9.0570752e+07
+    - type: name
+      text: victoria-metrics-prod
+      origin: 17accaf2-de32-4bed-bb39-55396d416f08
+    - type: period
+      value: 120.0
+    - type: type
+      text: process
+      origin: 17accaf2-de32-4bed-bb39-55396d416f08

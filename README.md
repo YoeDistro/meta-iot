@@ -14,6 +14,7 @@ release cadence by hand.
 | `grafana-binary`          | 13.1.1  | `grafana`          | OSS release from `dl.grafana.com`, AGPL-3.0-only |
 | `victoria-metrics-binary` | 1.148.0 | `victoria-metrics` | Single-node release, Apache-2.0                  |
 | `siot-binary`             | 0.18.5  | `simpleiot`        | [Simple IoT](https://simpleiot.org), Apache-2.0  |
+| `siot-config`             | 1.0     | node configuration | `allarch`, imported once on first boot, MIT      |
 
 `siot-binary` conflicts with, replaces, and provides the source-built
 `simpleiot` recipe in `meta-openembedded/meta-oe`. Install one or the other, not
@@ -121,6 +122,70 @@ VM_OPTS=-relabelConfig=/etc/victoria-metrics/relabel.yml
 
 The `/metric-relabel-debug` page shows how a rule applies before it goes live.
 
+## Importing the Simple IoT configuration
+
+Configuring those nodes by hand on every device gets old quickly, so
+`siot-config` carries a versioned copy of the configuration in
+`/etc/siot/config.yml` and imports it into the local instance one time. A
+freshly flashed device comes up already recording metrics.
+
+The shipped configuration adds these children of the device node:
+
+| Node               | Settings                                            |
+| ------------------ | --------------------------------------------------- |
+| `Database`         | `http://localhost:8428`, `tag` point type recorded  |
+| Host metrics       | type `system`, 60 second period                     |
+| Simple IoT metrics | type `app`, 120 second period                       |
+| Grafana metrics    | type `process`, `grafana`, 120 second period        |
+| Database metrics   | type `process`, `victoria-metrics-prod`, 120 second |
+
+The recipe depends on the `simpleiot` runtime package, which either
+`siot-binary` or the source-built recipe provides, and it reads
+`/etc/default/siot` for `SIOT_NATS_PORT` and `SIOT_AUTH_TOKEN` when that file
+is present.
+
+`siot-config.service` runs after `siot.service`, waits for the local NATS port
+to answer, reads the device node ID from `siot export`, and imports the file
+below that node:
+
+```
+siot import -parentID <device node id> < /etc/siot/config.yml
+```
+
+Node IDs are left out of the YAML on purpose. Simple IoT assigns a new ID to
+every imported node, so one file serves any number of devices. Runtime points,
+such as collected metrics and host details, are left out as well; the clients
+fill those in as they run. See the
+[configuration documentation](https://docs.simpleiot.org/docs/user/configuration.html)
+for the file format.
+
+Simple IoT appends ` (import)` to the description of each top-level node it
+imports, so the nodes appear in the portal as `Metrics System (import)` and so
+on. The descriptions are editable in the portal.
+
+A successful import records `/var/lib/siot/.config-imported`, and the unit
+skips itself while that stamp is present. The stamp sits beside the store, so
+clearing `/var/lib/siot` returns the device to its first-boot state and the
+configuration is imported again on the next start.
+
+To import a revised configuration on a running device:
+
+```
+rm /var/lib/siot/.config-imported
+systemctl start siot-config
+```
+
+Import adds nodes rather than replacing them, so remove the nodes being
+replaced in the portal first, otherwise both copies end up in the tree.
+
+To ship a different configuration, add a `siot-config_%.bbappend` in your own
+layer holding its own `siot-config.yml`, which then takes precedence over the
+copy in this layer:
+
+```
+FILESEXTRAPATHS:prepend := "${THISDIR}/siot-config:"
+```
+
 ## Adding the layer
 
 Add to your `bblayers.conf`:
@@ -132,7 +197,7 @@ BBLAYERS += "${TOPDIR}/sources/meta-iot"
 Then install what you need, for example:
 
 ```
-IMAGE_INSTALL:append = " grafana-binary victoria-metrics-binary siot-binary"
+IMAGE_INSTALL:append = " grafana-binary victoria-metrics-binary siot-binary siot-config"
 ```
 
 ## Updating a recipe to a new upstream release

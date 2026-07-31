@@ -1,0 +1,66 @@
+#!/bin/sh
+# Import the versioned Simple IoT configuration into the local instance.
+#
+# The import runs one time: it records a stamp file on success and returns
+# early whenever that stamp is present. Simple IoT adds nodes on import
+# rather than replacing them, so removing the stamp to import again leaves
+# the previously imported nodes in place.
+#
+# Reference: https://docs.simpleiot.org/docs/user/configuration.html
+
+set -eu
+
+CONFIG=${SIOT_CONFIG_FILE:-/etc/siot/config.yml}
+STAMP=${SIOT_CONFIG_STAMP:-/var/lib/siot/.config-imported}
+TRIES=${SIOT_CONFIG_TRIES:-30}
+RETRY_SECS=${SIOT_CONFIG_RETRY_SECS:-2}
+
+if [ -e "$STAMP" ]; then
+    echo "Configuration already imported, recorded in $STAMP"
+    exit 0
+fi
+
+if [ ! -r "$CONFIG" ]; then
+    echo "Configuration file $CONFIG is missing" >&2
+    exit 1
+fi
+
+# Talk to the instance on this device. SIOT_NATS_SERVER comes from
+# /etc/default/siot, where it names an upstream instance when set, and the
+# siot command line would otherwise pick it up.
+unset SIOT_NATS_SERVER
+NATS_SERVER="nats://127.0.0.1:${SIOT_NATS_PORT:-4222}"
+
+# Imported nodes attach to the device node, whose ID is generated when the
+# store is first created. Export answers with the device node at the top of
+# the tree, and also tells us when the instance is ready to serve requests.
+try=1
+while : ; do
+    device_id=$(siot export -natsServer "$NATS_SERVER" 2>/dev/null |
+        awk '$1 == "-" && $2 == "id:" { print $3; exit }') || true
+
+    if [ -n "${device_id:-}" ]; then
+        break
+    fi
+
+    if [ "$try" -ge "$TRIES" ]; then
+        echo "Simple IoT did not answer on $NATS_SERVER after $TRIES tries" >&2
+        exit 1
+    fi
+
+    try=$((try + 1))
+    sleep "$RETRY_SECS"
+done
+
+echo "Importing $CONFIG under device node $device_id"
+siot import -natsServer "$NATS_SERVER" -parentID "$device_id" < "$CONFIG"
+
+mkdir -p "$(dirname "$STAMP")"
+{
+    echo "config: $CONFIG"
+    echo "parent: $device_id"
+    echo "date: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+    sha256sum "$CONFIG" 2>/dev/null || true
+} > "$STAMP"
+
+echo "Import complete, recorded in $STAMP"
