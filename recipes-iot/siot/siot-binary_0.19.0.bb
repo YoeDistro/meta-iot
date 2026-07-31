@@ -8,29 +8,32 @@ BUGTRACKER = "https://github.com/simpleiot/simpleiot/issues"
 SECTION = "console/network"
 
 LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
+# The release assets are bare executables, so there is no LICENSE file to
+# check against. Use the copy that comes with OE-core instead.
+LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0;md5=89aea4e17d99a7cacdbeed46a0096b10"
 
 # Upstream release asset naming, keyed off the target architecture
 SIOT_ARCH:x86-64 = "x86_64"
 SIOT_ARCH:aarch64 = "arm64"
 SIOT_ARCH:arm = "${@bb.utils.contains_any('TUNE_FEATURES', 'armv7a armv7ve', 'arm7', 'arm6', d)}"
-SIOT_ARCH:x86 = "i386"
 SIOT_ARCH:riscv64 = "riscv64"
 
-SRC_URI = "https://github.com/simpleiot/simpleiot/releases/download/v${PV}/simpleiot-v${PV}-linux-${SIOT_ARCH}.tar.gz;name=${SIOT_ARCH} \
+# As of v0.19.0 upstream publishes the executable directly rather than wrapping
+# it in a tarball, so the fetcher copies the asset into ${UNPACKDIR} unchanged.
+SIOT_BINARY = "simpleiot-v${PV}-linux-${SIOT_ARCH}"
+
+SRC_URI = "https://github.com/simpleiot/simpleiot/releases/download/v${PV}/${SIOT_BINARY};name=${SIOT_ARCH} \
            file://siot.service \
            file://siot.default \
           "
 
-SRC_URI[x86_64.sha256sum] = "8a94e170b03906c51bc97b52df0517a370ffeb6167909db67d0214a15de51038"
-SRC_URI[arm64.sha256sum] = "533e0e3a05992a48cf94bbf39420b414b393086060e09d83971eac66fc03a5bc"
-SRC_URI[arm7.sha256sum] = "35b6cc4f3e720e4e08129a6aff9f33a58a9ec527f514453fe2fe62b544a0d8ba"
-SRC_URI[arm6.sha256sum] = "7b9156ae2146a42cd0dd3549771b1e4e755eeb980746e3c7fe29d69e715f3611"
-SRC_URI[i386.sha256sum] = "900f7e90c978ac9169605843d6374ce70189061047b73df7267b397d8cf27a58"
-SRC_URI[riscv64.sha256sum] = "92c307ef99a84dd0154317323dd23f3b82f4ebc4ba439812cbfeb9a550ef0603"
+SRC_URI[x86_64.sha256sum] = "e6b06363885d4d1857005baa3499b720436b55a673d6fa911154c590cdc6c9ad"
+SRC_URI[arm64.sha256sum] = "897f493d769802bb84ab7fbbc552d65077d3e1f15cf66b7ad35a4bbc8f90e462"
+SRC_URI[arm7.sha256sum] = "08a8aa04ee7324dc987ccf34c183e6670d0862783cb5431c62af0e92c1dffad1"
+SRC_URI[arm6.sha256sum] = "a5757c4f210dba521b6b59daa867ab30627a4c33272d3a3a3567e2c8c96a11f2"
+SRC_URI[riscv64.sha256sum] = "b6f758d4127bf77f3d9fbf93fddf4e7314a584c24be4f482c85acb2355a3c1b4"
 
-# Upstream tarballs unpack into simpleiot-v<version>-linux-<arch>/
-S = "${UNPACKDIR}/simpleiot-v${PV}-linux-${SIOT_ARCH}"
+S = "${UNPACKDIR}"
 
 inherit bin_package systemd
 
@@ -45,7 +48,7 @@ RREPLACES:${PN} += "simpleiot"
 # rootfs shipped underneath would be covered. siot.service creates it.
 
 do_install() {
-    install -D -m 0755 ${S}/siot ${D}${bindir}/siot
+    install -D -m 0755 ${UNPACKDIR}/${SIOT_BINARY} ${D}${bindir}/siot
 
     install -D -m 0644 ${UNPACKDIR}/siot.default ${D}${sysconfdir}/default/siot
 
@@ -64,4 +67,4 @@ CONFFILES:${PN} = "${sysconfdir}/default/siot"
 INSANE_SKIP:${PN} += "already-stripped ldflags"
 
 # Upstream publishes Linux binaries for these architectures only
-COMPATIBLE_HOST = "(x86_64|i.86|arm|aarch64|riscv64).*-linux"
+COMPATIBLE_HOST = "(x86_64|arm|aarch64|riscv64).*-linux"
