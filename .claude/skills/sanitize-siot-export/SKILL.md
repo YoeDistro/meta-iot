@@ -46,8 +46,8 @@ into its place. That single rule produces both forms the layer uses:
 
 | Command | Result | Import against |
 | --- | --- | --- |
-| `--keep device,user,metrics,db` (default) | the whole tree, device node at the root | the root of a fresh store |
-| `--keep metrics,db` | a flat list, no wrapper | a device node that already exists |
+| `--keep device,user,metrics,db,gps` (default) | the whole tree, device node at the root | the root of a fresh store |
+| `--keep metrics,db,gps` | a flat list, no wrapper | a device node that already exists |
 
 The layer ships the first form. `siot-config-import` runs
 `siot import -parentID root`, so the file supplies its own device node
@@ -82,6 +82,12 @@ converting by hand.
      else is data, including `count`, which reports how many matching
      processes a client found.
    - **db** — `description`, `uri`, `tagPointType`, all configuration.
+   - **gps** — `description`, `disabled`, `gpsSource`, `port`, `baud`,
+     `gpsdAddress`, `debug`. The fix the receiver reports is data, and
+     `rxReset` and `errorCountReset` are momentary commands an operator
+     sends to clear a counter, so neither belongs in a shipped file.
+     `debug` is a setting and does survive, so check its level before
+     committing a capture taken during bring-up.
 
 5. **Points with no `text` and no `value`.** An export writes a point for
    every field a client knows about, including the ones nobody filled in.
@@ -119,5 +125,21 @@ configuration in this layer, and the command under "Run the script" rewrites
 it in place. Read the diff before committing: a capture carries whatever the
 source device happened to be set to.
 
-The script emits no comments, so anything worth explaining about the
-configuration belongs in the layer README rather than in the file itself.
+## Comments
+
+PyYAML drops the comments an export carried and cannot write new ones, so the
+script writes them itself, ahead of the dump. Every generated file opens with a
+short note on where it came from and what it leaves out.
+
+A layer with more to say keeps that prose in a file of its own and passes it to
+`--header`, which lands above the standard note:
+
+```sh
+siot export | .claude/skills/sanitize-siot-export/sanitize-siot-export.py \
+    --header ../meta-openity/recipes-iot/siot-config/siot-config.header \
+    > recipes-iot/siot-config/files/siot-config.yml
+```
+
+Keeping that prose in a separate file is what lets it survive: the command
+above rewrites the configuration in place, so anything typed into the YAML by
+hand is gone on the next capture. `--no-header` writes the configuration alone.
