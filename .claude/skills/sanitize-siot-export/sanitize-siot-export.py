@@ -25,7 +25,7 @@ import yaml
 # --keep when the target already provides some of it. Dropping 'device'
 # and 'user', for instance, leaves the nodes that attach beneath a device
 # node that already exists.
-DEFAULT_KEEP = ("device", "user", "metrics", "db", "gps")
+DEFAULT_KEEP = ("device", "user", "metrics", "db", "gps", "serialDev")
 
 # Written above every generated file, so the next person to open one knows
 # where it came from and what it leaves out. A layer with more to say adds
@@ -57,6 +57,12 @@ CONFIG_POINTS = {
     # to clear a counter instead of settings worth shipping.
     "gps": ("description", "disabled", "gpsSource", "port", "baud",
             "gpsdAddress", "debug"),
+    # A serialDev node also carries everything the MCU reports — battery,
+    # charger, temperatures, fan speeds, firmware version — along with the
+    # link counters, the resets that clear them, and maxMessageLength,
+    # which the client writes back with its own default.
+    "serialDev": ("description", "disabled", "port", "baud", "protocol",
+                  "timeout", "logConsole", "syncParent", "hrDest", "debug"),
 }
 
 
