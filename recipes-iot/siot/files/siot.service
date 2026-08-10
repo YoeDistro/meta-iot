@@ -17,7 +17,7 @@ ExecStartPre=/bin/mkdir -p ${SIOT_DATA}
 ExecStart=/usr/bin/siot serve
 Restart=on-failure
 RestartSec=5
-# Give the embedded store time to check-point on shutdown
+# Give the embedded store time to sync its JetStream files on shutdown
 TimeoutStopSec=30
 
 [Install]

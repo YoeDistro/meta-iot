@@ -14,7 +14,7 @@ release cadence by hand.
 | `grafana-binary`          | 13.1.1  | `grafana`          | OSS release from `dl.grafana.com`, AGPL-3.0-only |
 | `victoria-metrics-binary` | 1.148.0 | `victoria-metrics` | Single-node release, Apache-2.0                  |
 | `siot-binary`             | 0.18.5  | `simpleiot`        | [Simple IoT](https://simpleiot.org), Apache-2.0  |
-| `siot-config`             | 1.0     | node configuration | `allarch`, imported once on first boot, MIT      |
+| `siot-config`             | 1.0     | node configuration | `allarch`, applied by SIOT provisioning, MIT     |
 
 `siot-binary` conflicts with, replaces, and provides the source-built
 `simpleiot` recipe in `meta-openembedded/meta-oe`. Install one or the other, not
@@ -57,7 +57,7 @@ deployments commonly need access to serial and GPIO devices.
 
 Yoe carries `/data` on its own partition, laid down by the image definitions
 in `meta-yoe`, so the databases these services keep there outlive a rootfs
-update: the Simple IoT store with its write-ahead log files, the Grafana
+update: the Simple IoT store, held in JetStream files since v0.23.0, the Grafana
 database along with any plugins installed later, and the VictoriaMetrics time
 series data. Only that dynamic data moves. Grafana writes its logs to
 `/var/log` as before, and everything the recipes build stays in the rootfs.
@@ -86,8 +86,8 @@ cp -a /var/lib/victoria-metrics/. /data/victoria-metrics/
 systemctl start siot grafana-server victoria-metrics
 ```
 
-`cp -a` carries the dot files, including the `.config-imported` stamp, so the
-configuration import stays recorded. Ownership is set again on the next start.
+`cp -a` carries the dot files along with the rest of each directory.
+Ownership is set again on the next start.
 
 Grafana site configuration lives in `/etc/grafana/grafana.ini`. The shipped
 `/usr/share/grafana/conf/defaults.ini` is left untouched, as upstream expects.
@@ -178,18 +178,17 @@ and the database may differ. After changing it, run
 `systemctl restart victoria-metrics`; `curl -s localhost:8428/flags` lists the
 flags that differ from their defaults.
 
-## Importing the Simple IoT configuration
+## Provisioning the Simple IoT configuration
 
 Configuring those nodes by hand on every device gets old quickly, so
-`siot-config` carries a versioned copy of the configuration in
-`/etc/siot/config.yml` and imports it into the local instance one time. A
-freshly flashed device comes up already recording metrics.
+`siot-config` carries a versioned copy of the configuration and hands it to
+the provisioning Simple IoT has built in. A freshly flashed device comes up
+already recording metrics.
 
-The shipped configuration describes a device node and everything beneath it:
+The shipped configuration describes the nodes beneath the device node:
 
 | Node                | Settings                                             |
 | ------------------- | ---------------------------------------------------- |
-| Device              | description `siot`                                   |
 | Administrative user | `admin` / `admin`                                    |
 | Host metrics        | type `system`, 60 second period                      |
 | `Database`          | `http://localhost:8428`, `tag` point type recorded   |
@@ -204,80 +203,81 @@ described at the end of this section.
 The recipe depends on the `simpleiot` runtime package, which either
 `siot-binary` or the source-built recipe provides.
 
-`siot-config.service` runs after `siot.service`, waits for the instance to
-answer, and imports the file at the root of the tree:
+### How the files reach the instance
+
+Simple IoT applies the files in its provisioning directory at start-up and
+whenever they change, so there is no import step and no unit of its own to
+run. The package ships two files:
+
+| File                                              | Purpose                          |
+| ------------------------------------------------- | -------------------------------- |
+| `/etc/siot/provisioning/10-config.yml`            | the configuration itself         |
+| `/usr/lib/systemd/system/siot.service.d/10-provisioning.conf` | names the directory  |
+
+The drop-in sets `SIOT_PROVISIONING_DIR=/etc/siot/provisioning`. Left unset,
+Simple IoT reads `${SIOT_DATA}/provisioning`, which lives on the `/data`
+partition where an image cannot lay down files, so the directory that ships in
+the rootfs has to be named. The drop-in comes from `siot-config` rather than
+from `siot.service`, which keeps the directory unnamed on a device that has no
+files in it.
+
+Files are applied in lexical order, which is what the `10-` prefix is for: a
+layer adding a file of its own chooses whether it lands before or after this
+one.
+
+### Applying a revised configuration
+
+Provisioning matches nodes by description rather than by ID, so applying a
+file creates what is missing, sends only the points that differ, and does
+nothing when the tree already agrees. Editing the file on a device is enough:
 
 ```
-siot import -parentID root < /etc/siot/config.yml
+vi /etc/siot/provisioning/10-config.yml
 ```
 
-Importing at the root means the file describes a whole tree, beginning with
-its own device node, rather than a set of nodes to attach beneath the device
-node an instance generates for itself. The `siot` command picks up its
-connection settings from the environment, and `siot-config.service` reads
-`/etc/default/siot` so that it reaches the instance the same way
-`siot.service` starts it.
+The change is picked up within a minute, or immediately on the next restart of
+`siot.service`. `SIOT_PROVISIONING_INTERVAL` in `/etc/default/siot` sets how
+often the directory is checked for what the watch missed.
 
-Node IDs are left out of the YAML on purpose. Simple IoT assigns a new ID to
-every imported node, so one file serves any number of devices. Runtime points,
-such as collected metrics and host details, are left out as well; the clients
-fill those in as they run. See the
-[configuration documentation](https://docs.simpleiot.org/docs/user/configuration.html)
-for the file format.
+Because a description is how a file finds a node, renaming one in the portal
+detaches it from the entry describing it, and the next apply creates a second
+node beside the renamed one. Rename in two steps: delete the old description
+in the same file that introduces the new one.
 
-Simple IoT appends ` (import)` to the description of each node at the top
-level of the imported file, so a node described as `Metrics System` appears in
-the portal as `Metrics System (import)`. The descriptions are editable there.
+A `provisioning` node under the root records what happened. Each file gets a
+`provisioningFile` child carrying its name, the checksum of what was applied,
+and the last error if it failed, which is where to look when a device comes up
+without the configuration it should have.
 
-### Importing again on a running device
+Removing a file from the directory removes its status and leaves the nodes it
+created in place. Provisioning describes what should exist and does not own
+what it made, so use a `delete` list to remove nodes.
 
-A successful import records `/data/siot/.config-imported`, and both the unit
-and the script stand down while that stamp is present. The stamp sits beside
-the store, so clearing `/data/siot` returns the device to its first-boot state
-and the configuration is imported again on the next start.
-
-To import a revised configuration while keeping the store:
-
-```
-siot-config-import --force
-```
-
-`--force` imports regardless of the stamp, then rewrites the stamp with a
-`forced: yes` line recording how the import happened. The recipe installs the
-script in `/usr/bin` so that it is on the path for this. Run it directly:
-`systemctl start siot-config` does nothing once the stamp exists, because the
-unit's `ConditionPathExists` holds it back before the script gets a chance to
-run.
-
-Import adds nodes rather than replacing them, so remove the nodes being
-replaced in the portal first, otherwise both copies end up in the tree.
+`siot provision -dir <dir> -check` parses the files without a running
+instance, which is what a build can use to fail on a bad file, and
+`siot provision -dir <dir>` prints what they would do to the instance that is
+running.
 
 ### Building a configuration from a running device
 
 Setting a device up through the portal and capturing the result is usually
-easier than writing the YAML by hand. `siot export` describes one running
-instance, though: generated node IDs, an `origin` on every point an operator
-set, and whatever the clients have collected so far. None of that belongs in a
-configuration meant for every device.
-
-The `sanitize-siot-export` skill in this layer removes it:
+easier than writing the YAML by hand. Since v0.22.0 an export describes
+configuration and nothing else, so it is usable as a provisioning file as it
+comes:
 
 ```
-siot export | .claude/skills/sanitize-siot-export/sanitize-siot-export.py \
-    > recipes-iot/siot-config/files/siot-config.yml
+siot export > recipes-iot/siot-config/files/siot-config.yml
 ```
 
-The script drops `id`, `parent`, and `origin` fields, keeps only the points an
-operator sets, and leaves out points nobody filled in. `--keep` chooses which
-node types survive, and a type left out gives up its children, which move into
-its place. Keeping `device,user,metrics,db`, the default, produces a whole
-tree ready to import at the root.
+Node IDs, the root node, valueless points, and the origin recording which
+client last wrote each point are all left out, and the nodes are found by
+description on the device that receives them, so one file serves any number of
+devices.
 
 That rewrites the shipped configuration in place, so review the result before
 committing it: a capture carries whatever the source device was set to,
-including the description on its device node and the administrative account's
-password. The skill's `SKILL.md` records which points count as configuration
-for each node type, and why each piece of the export is left behind.
+including the administrative account's password and whatever an operator
+changed while trying things out.
 
 To ship a different configuration, add a `siot-config_%.bbappend` in your own
 layer holding its own `siot-config.yml`, which then takes precedence over the

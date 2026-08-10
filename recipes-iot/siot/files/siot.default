@@ -1,7 +1,7 @@
 # Runtime configuration for siot.service
 # Reference: https://docs.simpleiot.org
 
-# Directory holding the SimpleIoT store (siot.sqlite and its WAL files).
+# Directory holding the SimpleIoT store, a JetStream directory since v0.23.0.
 # On the /data partition so that it outlives a rootfs update.
 SIOT_DATA=/data/siot
 
@@ -21,3 +21,9 @@ OS_VERSION_FIELD=VERSION
 
 # Set to connect this instance upstream to another SimpleIoT instance
 #SIOT_NATS_SERVER=nats://example.com:4222
+
+# Directory of provisioning files applied at start-up and whenever they
+# change. Unset, SimpleIoT reads ${SIOT_DATA}/provisioning when that directory
+# exists. The siot-config package ships a drop-in naming its own directory in
+# the rootfs, so set this only to point somewhere else.
+#SIOT_PROVISIONING_DIR=/etc/siot/provisioning
