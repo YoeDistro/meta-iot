@@ -12,6 +12,11 @@ RequiresMountsFor=/data
 Type=simple
 User=victoriametrics
 Group=victoriametrics
+# Fallback for a device whose /etc/default file predates this setting: the
+# file is a conffile and survives an upgrade, while this unit does not, and an
+# empty -search.latencyOffset= would keep the service from starting. Listed
+# before EnvironmentFile so the file wins wherever it defines the variable.
+Environment=VM_SEARCH_LATENCY_OFFSET=0s
 EnvironmentFile=/etc/default/victoria-metrics
 # A mount covers whatever the rootfs ships under /data, so the data
 # directory is created here rather than packaged by the recipe. The "+"
@@ -23,6 +28,7 @@ ExecStart=/usr/bin/victoria-metrics-prod \
     -storageDataPath=${VM_STORAGE_DATA_PATH} \
     -httpListenAddr=${VM_HTTP_LISTEN_ADDR} \
     -retentionPeriod=${VM_RETENTION_PERIOD} \
+    -search.latencyOffset=${VM_SEARCH_LATENCY_OFFSET} \
     $VM_OPTS
 Restart=on-failure
 RestartSec=5

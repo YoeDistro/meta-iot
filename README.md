@@ -158,6 +158,26 @@ VM_OPTS=-relabelConfig=/etc/victoria-metrics/relabel.yml
 
 The `/metric-relabel-debug` page shows how a rule applies before it goes live.
 
+### Query latency offset
+
+A sample reaches VictoriaMetrics about a second after Simple IoT records it,
+because the write client sends a batch every second. Upstream then holds it back
+from queries for another 30 seconds: `-search.latencyOffset` shifts the end of
+every query range that far into the past so that slow Prometheus scrapes are
+still counted. Data arrives here by push rather than by scrape, so this layer
+sets the offset to `0s` and dashboards show a value as soon as it is written.
+
+The setting lives in `/etc/default/victoria-metrics`:
+
+```
+VM_SEARCH_LATENCY_OFFSET=0s
+```
+
+A second or two is worth using instead when the clocks on the writing devices
+and the database may differ. After changing it, run
+`systemctl restart victoria-metrics`; `curl -s localhost:8428/flags` lists the
+flags that differ from their defaults.
+
 ## Importing the Simple IoT configuration
 
 Configuring those nodes by hand on every device gets old quickly, so
