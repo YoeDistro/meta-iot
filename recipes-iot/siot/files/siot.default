@@ -13,6 +13,14 @@ SIOT_NATS_PORT=4222
 SIOT_NATS_HTTP_PORT=8222
 SIOT_NATS_WS_PORT=9222
 
+# History kept per subject in the JetStream store. Retention is per subject,
+# so the current value of every point survives and only older history is
+# trimmed. Unset, SimpleIoT keeps 5000 per subject; -1 keeps everything. A new
+# value applies to each stream the first time it is opened after a restart,
+# and JetStream trims subjects that already hold more. The recipe fills this
+# in when SIOT_STORE_MAX_MSGS_PER_SUBJECT is set in the build configuration.
+#SIOT_STORE_MAX_MSGS_PER_SUBJECT=5000
+
 # Field in /etc/os-release reported as the device OS version
 OS_VERSION_FIELD=VERSION
 

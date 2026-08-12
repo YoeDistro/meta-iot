@@ -47,10 +47,28 @@ RREPLACES:${PN} += "simpleiot"
 # points it at the /data partition, which is a mount point, so anything the
 # rootfs shipped underneath would be covered. siot.service creates it.
 
+# History kept per subject in the JetStream store, in points. Retention is per
+# subject, so the current value of every point is preserved and only older
+# history is trimmed. Left empty, the shipped /etc/default/siot leaves the
+# setting commented out and SimpleIoT keeps its own default of 5000; -1 keeps
+# everything. A distro, machine, or layer that wants a different depth sets
+# this, for example:
+#
+#   SIOT_STORE_MAX_MSGS_PER_SUBJECT = "90000"
+SIOT_STORE_MAX_MSGS_PER_SUBJECT ?= ""
+
 do_install() {
     install -D -m 0755 ${UNPACKDIR}/${SIOT_BINARY} ${D}${bindir}/siot
 
     install -D -m 0644 ${UNPACKDIR}/siot.default ${D}${sysconfdir}/default/siot
+
+    if [ -n "${SIOT_STORE_MAX_MSGS_PER_SUBJECT}" ]; then
+        sed -i -e 's|^#*SIOT_STORE_MAX_MSGS_PER_SUBJECT=.*|SIOT_STORE_MAX_MSGS_PER_SUBJECT=${SIOT_STORE_MAX_MSGS_PER_SUBJECT}|' \
+            ${D}${sysconfdir}/default/siot
+        grep -q "^SIOT_STORE_MAX_MSGS_PER_SUBJECT=${SIOT_STORE_MAX_MSGS_PER_SUBJECT}\$" \
+            ${D}${sysconfdir}/default/siot || \
+            bbfatal "siot.default has no SIOT_STORE_MAX_MSGS_PER_SUBJECT line to set"
+    fi
 
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
         install -D -m 0644 ${UNPACKDIR}/siot.service ${D}${systemd_system_unitdir}/siot.service
