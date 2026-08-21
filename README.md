@@ -13,7 +13,7 @@ release cadence by hand.
 | ------------------------- | ------- | ------------------ | ------------------------------------------------ |
 | `grafana-binary`          | 13.1.1  | `grafana`          | OSS release from `dl.grafana.com`, AGPL-3.0-only |
 | `victoria-metrics-binary` | 1.148.0 | `victoria-metrics` | Single-node release, Apache-2.0                  |
-| `siot-binary`             | 0.18.5  | `simpleiot`        | [Simple IoT](https://simpleiot.org), Apache-2.0  |
+| `siot-binary`             | 0.25.0  | `simpleiot`        | [Simple IoT](https://simpleiot.org), Apache-2.0  |
 | `siot-config`             | 1.0     | node configuration | `allarch`, applied by SIOT provisioning, MIT     |
 
 `siot-binary` conflicts with, replaces, and provides the source-built
