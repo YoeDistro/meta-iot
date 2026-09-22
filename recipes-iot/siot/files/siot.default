@@ -5,13 +5,11 @@
 # On the /data partition so that it outlives a rootfs update.
 SIOT_DATA=/data/siot
 
-# Port the built-in web portal listens on
-SIOT_HTTP_PORT=8118
-
-# Ports used by the embedded NATS server
-SIOT_NATS_PORT=4222
-SIOT_NATS_HTTP_PORT=8222
-SIOT_NATS_WS_PORT=9222
+# Ports follow the NATS port, 4222 by default: the web portal listens one
+# above it (4223) and NATS monitoring two above it (4224, loopback only).
+# SIOT_NATS_PORT alone moves all three; SIOT_HTTP_PORT and
+# SIOT_NATS_MONITOR_PORT override them individually.
+#SIOT_NATS_PORT=4222
 
 # History kept per subject in the JetStream store. Retention is per subject,
 # so the current value of every point survives and only older history is

@@ -13,7 +13,7 @@ release cadence by hand.
 | ------------------------- | ------- | ------------------ | ------------------------------------------------ |
 | `grafana-binary`          | 13.1.1  | `grafana`          | OSS release from `dl.grafana.com`, AGPL-3.0-only |
 | `victoria-metrics-binary` | 1.148.0 | `victoria-metrics` | Single-node release, Apache-2.0                  |
-| `siot-binary`             | 0.25.0  | `simpleiot`        | [Simple IoT](https://simpleiot.org), Apache-2.0  |
+| `siot-binary`             | 0.28.3  | `simpleiot`        | [Simple IoT](https://simpleiot.org), Apache-2.0  |
 | `siot-config`             | 1.0     | node configuration | `allarch`, applied by SIOT provisioning, MIT     |
 
 `siot-binary` conflicts with, replaces, and provides the source-built
@@ -47,7 +47,7 @@ its runtime settings:
 | -------------------------- | ---------------------- | --------------------------- | ----------------------- |
 | `grafana-server.service`   | `:3000`                | `/data/grafana`             | logs in `/var/log`      |
 | `victoria-metrics.service` | `:8428`                | `/data/victoria-metrics`    | `/vmui` path for web ui |
-| `siot.service`             | `:8118`                | `/data/siot`                |                         |
+| `siot.service`             | `:4223`                | `/data/siot`                |                         |
 
 Grafana and VictoriaMetrics run under dedicated system users created by the
 `useradd` class. Simple IoT runs as root, matching upstream, since edge
@@ -98,7 +98,7 @@ The Simple IoT `Database` client writes points with the InfluxDB 2 line
 protocol, and VictoriaMetrics accepts that protocol at `/api/v2/write`, so the
 two services work together without a bridge.
 
-In the Simple IoT portal (`http://<device>:8118`), add a `Database` node as a
+In the Simple IoT portal (`http://<device>:4223`), add a `Database` node as a
 child of the node whose subtree should be recorded. The client records points
 published below its parent, so attaching it to the root node captures
 everything. Configure the node with:
