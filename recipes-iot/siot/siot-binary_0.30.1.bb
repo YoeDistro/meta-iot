@@ -27,11 +27,11 @@ SRC_URI = "https://github.com/simpleiot/simpleiot/releases/download/v${PV}/${SIO
            file://siot.default \
           "
 
-SRC_URI[x86_64.sha256sum] = "2edaed515cd7acfcb8884bc6288bd1c50964b501f47045a8de46e61a637fdfeb"
-SRC_URI[arm64.sha256sum] = "688813c302ce9467d0a0abb48ef3357ec2093fb43572e78890fd54ce02d4c803"
-SRC_URI[arm7.sha256sum] = "96a2a2a8a17736ce24a0892b7e2f834d94791e3c2b6e34ac8578a32919c7a1af"
-SRC_URI[arm6.sha256sum] = "fee9b6c33096063990dae0c1c59655fe73f30ef62dc6d1bd499a3de1b7749c2d"
-SRC_URI[riscv64.sha256sum] = "ec51b90107359ac207badd35c541b0c5769840bcf3d5e8d835beae1e14cfcab0"
+SRC_URI[x86_64.sha256sum] = "1d6dfe53457073aafc36cc72ac42500ac39d952064cb75cf0b366a98e094a6f2"
+SRC_URI[arm64.sha256sum] = "8bc6d9121119b90610f43f493dd860345133fc3a1cf207ba17f9f2c84f3e5b20"
+SRC_URI[arm7.sha256sum] = "2590352574615c5fec9690afa76b065b58ff67d70165c004fe40b4b04e60f76f"
+SRC_URI[arm6.sha256sum] = "28b0ef558a923bbc1e6f3d34126483ae2d26ad0c0e5671fdc584cb4e47e2e99a"
+SRC_URI[riscv64.sha256sum] = "365b873ff9abe71be7e4c95819ff352e136fbf031bcdf7f00b169bb2c83ebc5a"
 
 S = "${UNPACKDIR}"
 
